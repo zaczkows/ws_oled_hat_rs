@@ -1,0 +1,2 @@
+[workspace]
+members = ["bcm2835-rs", "app"]
