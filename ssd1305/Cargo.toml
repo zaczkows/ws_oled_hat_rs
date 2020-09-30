@@ -1,0 +1,10 @@
+[package]
+name = "ssd1305"
+version = "0.1.0"
+authors = ["Piotr Zaczkowski <pzaczkowski@protonmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bcm2835-rs = { path = "../bcm2835-rs" }
