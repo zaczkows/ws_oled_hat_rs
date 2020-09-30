@@ -80,7 +80,7 @@ impl Ssd1305 {
     pub fn clean(&mut self) {}
     pub fn display(&mut self) {
         let spi = self.spi.as_mut().expect("SPI not set!");
-        for page in 0..=PAGES {
+        for page in 0..PAGES {
             // Set page address
             self.gpio.spi_command(spi, 0xB0 + page as u8);
             // set low column address
@@ -102,6 +102,12 @@ impl Ssd1305 {
     }
 
     pub fn set_pixel(&mut self) {}
+}
+
+impl Drop for Ssd1305 {
+    fn drop(&mut self) {
+        self.spi = None;
+    }
 }
 
 #[cfg(test)]

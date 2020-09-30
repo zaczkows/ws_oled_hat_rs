@@ -91,7 +91,6 @@ pub enum SpiClockDivider {
     Div1 = bindings::bcm2835SPIClockDivider_BCM2835_SPI_CLOCK_DIVIDER_1 as isize,
 }
 
-// pub use bindings::bcm2835SPIChipSelect as SpiChipSelect;
 #[derive(Debug)]
 pub enum SpiChipSelect {
     Cs0 = bindings::bcm2835SPIChipSelect_BCM2835_SPI_CS0 as isize,
@@ -105,7 +104,7 @@ pub struct Bcm2835Spi {}
 
 impl Bcm2835Spi {
     pub fn new() -> Option<Self> {
-        let success: bool = unsafe { bindings::bcm2835_spi_begin() == 1 };
+        let success: bool = unsafe { bindings::bcm2835_spi_begin() != 0 };
         if success {
             Some(Bcm2835Spi {})
         } else {
