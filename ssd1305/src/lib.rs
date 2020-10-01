@@ -77,7 +77,16 @@ impl Ssd1305 {
         self.gpio.spi_command(spi, 0xAF); //-Set Page Addressing Mode (0x00/0x01/0x02)
     }
 
-    pub fn clean(&mut self) {}
+    pub fn clean(&mut self) {
+        for i in self.buffer.iter_mut() {
+            *i = 0;
+        }
+    }
+
+    pub fn data(&mut self) -> &mut [u8] {
+        &mut self.buffer
+    }
+
     pub fn display(&mut self) {
         let spi = self.spi.as_mut().expect("SPI not set!");
         for page in 0..PAGES {

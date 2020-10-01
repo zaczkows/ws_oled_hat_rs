@@ -1,7 +1,7 @@
 //! Render example where each glyph pixel is output as an ascii character.
-use rusttype::{point, Font, Scale};
+// use rusttype::{point, Font, Scale};
 use ssd1305::Ssd1305;
-use std::io::Write;
+// use std::io::Write;
 
 fn main() {
     let screen = Ssd1305::new();
@@ -11,8 +11,15 @@ fn main() {
     }
     let mut screen = screen.unwrap();
     screen.begin();
+    screen.clean();
+    let data = screen.data();
+    data[0] = 1;
+    data[1] = 3;
+    data[2] = 7;
+    data[3] = 127;
     screen.display();
 
+    /*
     let font = if let Some(font_path) = std::env::args().nth(1) {
         let font_path = std::env::current_dir().unwrap().join(font_path);
         let data = std::fs::read(&font_path).unwrap();
@@ -93,4 +100,5 @@ fn main() {
             .unwrap();
         handle.write_all(b"\n").unwrap();
     }
+    */
 }
