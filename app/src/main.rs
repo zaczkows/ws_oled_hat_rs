@@ -28,12 +28,11 @@ fn main() {
     };
 
     // Desired font pixel height
-    let height: f32 = 18.0; // to get 80 chars across (fits most terminals); adjust as desired
+    let height: f32 = 16.0; // to get 80 chars across (fits most terminals); adjust as desired
     let pixel_height = height.ceil() as usize;
 
-    // 2x scale in x direction to counter the aspect ratio of monospace characters.
     let scale = Scale {
-        x: height * 1.0,
+        x: height * 0.9,
         y: height,
     };
 
@@ -59,7 +58,7 @@ fn main() {
             .unwrap_or(0.0)
             .ceil() as usize;
 
-        print!("width: {}, height: {}\r", width, pixel_height);
+        print!("\rwidth: {}, height: {}", width, pixel_height);
 
         let w = screen.width() as i32;
         let h = screen.height() as i32;
@@ -73,7 +72,7 @@ fn main() {
                         return;
                     }
                     // v should be in the range 0.0 to 1.0
-                    let i = if v > 0.43 { 1 } else { 0 };
+                    let i = if v > 0.45 { 1 } else { 0 };
                     data[(x + (y / 8) * w) as usize] |= i << (y % 8);
                 })
             }
