@@ -1,8 +1,8 @@
 const RST: u8 = 25;
 const DC: u8 = 24;
-const PAGES: usize = 8;
+const PAGES: usize = 4;
 const WIDTH: usize = 128;
-const HEIGHT: usize = 32;
+const HEIGHT: usize = 8 * 4; // 8 pixels * 4 rows
 
 // #[derive(Debug)]
 pub struct Ssd1305 {

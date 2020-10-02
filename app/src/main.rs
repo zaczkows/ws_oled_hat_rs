@@ -1,7 +1,7 @@
 //! Render example where each glyph pixel is output as an ascii character.
-// use rusttype::{point, Font, Scale};
+use rusttype::{point, Font, Scale};
 use ssd1305::Ssd1305;
-// use std::io::Write;
+use std::io::Write;
 
 fn main() {
     let screen = Ssd1305::new();
@@ -11,15 +11,19 @@ fn main() {
     }
     let mut screen = screen.unwrap();
     screen.begin();
-    screen.clean();
     let data = screen.data();
-    data[0] = 1;
-    data[1] = 3;
-    data[2] = 7;
-    data[3] = 127;
+    for (v, i) in data.iter_mut().enumerate() {
+        *i = (v % 256) as u8;
+    }
+    screen.display();
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    screen.begin();
+    let data = screen.data();
+    for (v, i) in data.iter_mut().rev().enumerate() {
+        *i = (v % 256) as u8;
+    }
     screen.display();
 
-    /*
     let font = if let Some(font_path) = std::env::args().nth(1) {
         let font_path = std::env::current_dir().unwrap().join(font_path);
         let data = std::fs::read(&font_path).unwrap();
@@ -30,7 +34,7 @@ fn main() {
             ));
         })
     } else {
-        const FONT_PATH: &str = "/home/zaczkows/.fonts/SourceCodePro-Medium.otf";
+        const FONT_PATH: &str = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
         eprintln!("No font specified ... using {}", FONT_PATH);
         let font_data = include_bytes!("/home/zaczkows/.fonts/SourceCodePro-Medium.otf");
         Font::try_from_bytes(font_data as &[u8]).expect("error constructing a Font from bytes")
@@ -100,5 +104,4 @@ fn main() {
             .unwrap();
         handle.write_all(b"\n").unwrap();
     }
-    */
 }
