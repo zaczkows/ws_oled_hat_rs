@@ -1,3 +1,5 @@
+pub use rusttype::{Font, Scale};
+
 const RST: u8 = 25;
 const DC: u8 = 24;
 const PAGES: usize = 4;
@@ -9,6 +11,19 @@ pub struct Ssd1305 {
     gpio: bcm2835_rs::Bcm2835Gpio,
     spi: Option<bcm2835_rs::Bcm2835Spi>,
     buffer: Vec<u8>,
+}
+
+#[derive(Debug)]
+pub struct Offset {
+    x: i32,
+    y: i32,
+}
+
+#[derive(Debug)]
+pub struct FontSettings<'a> {
+    font: rusttype::Font<'a>,
+    pub height: f32,
+    pub scale: rusttype::Scale,
 }
 
 impl Ssd1305 {
@@ -25,6 +40,14 @@ impl Ssd1305 {
         } else {
             None
         }
+    }
+
+    pub fn width(&self) -> usize {
+        WIDTH
+    }
+
+    pub fn height(&self) -> usize {
+        HEIGHT
     }
 
     pub fn begin(&mut self) {
@@ -77,14 +100,10 @@ impl Ssd1305 {
         self.gpio.spi_command(spi, 0xAF); //-Set Page Addressing Mode (0x00/0x01/0x02)
     }
 
-    pub fn clean(&mut self) {
+    pub fn clear(&mut self) {
         for i in self.buffer.iter_mut() {
             *i = 0;
         }
-    }
-
-    pub fn data(&mut self) -> &mut [u8] {
-        &mut self.buffer
     }
 
     pub fn display(&mut self) {
@@ -102,12 +121,42 @@ impl Ssd1305 {
         }
     }
 
-    pub fn width(&self) -> usize {
-        WIDTH
-    }
+    pub fn text(&mut self, fs: &FontSettings, text: &str) -> (usize, usize) {
+        let v_metrics = fs.font.v_metrics(fs.scale);
+        let offset = rusttype::point(0.0, v_metrics.ascent);
+        let glyphs: Vec<_> = fs.font.layout(text, fs.scale, offset).collect();
 
-    pub fn height(&self) -> usize {
-        HEIGHT
+        let pixel_height = fs.height.ceil() as usize;
+        // Find the most visually pleasing width to display
+        let width = glyphs
+            .iter()
+            .rev()
+            .map(|g| g.position().x as f32 + g.unpositioned().h_metrics().advance_width)
+            .next()
+            .unwrap_or(0.0)
+            .ceil() as usize;
+
+        print!("\rwidth: {}, height: {}", width, pixel_height);
+
+        let w = self.width() as i32;
+        let h = self.height() as i32;
+        let data = &mut self.buffer;
+        for g in glyphs {
+            if let Some(bb) = g.pixel_bounding_box() {
+                g.draw(|x, y, v| {
+                    let x = x as i32 + bb.min.x;
+                    let y = y as i32 + bb.min.y;
+                    if x >= w || y >= h {
+                        return;
+                    }
+                    // v should be in the range 0.0 to 1.0
+                    let i = if v > 0.45 { 1 } else { 0 };
+                    data[(x + (y / 8) * w) as usize] |= i << (y % 8);
+                })
+            }
+        }
+
+        (width, pixel_height)
     }
 
     pub fn set_pixel(&mut self) {}
@@ -116,6 +165,26 @@ impl Ssd1305 {
 impl Drop for Ssd1305 {
     fn drop(&mut self) {
         self.spi = None;
+    }
+}
+
+impl<'a> FontSettings<'a> {
+    pub fn new(font_path: &str) -> Option<FontSettings> {
+        let data = std::fs::read(&font_path);
+        if data.is_err() {
+            return None;
+        }
+        let data = data.unwrap();
+        let font = Font::try_from_vec(data);
+        if font.is_none() {
+            return None;
+        }
+
+        Some(FontSettings {
+            font: font.unwrap(),
+            height: 0.0,
+            scale: Scale::uniform(1.0),
+        })
     }
 }
 

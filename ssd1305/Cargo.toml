@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 bcm2835-rs = { path = "../bcm2835-rs" }
+rusttype = "0.9.x"
