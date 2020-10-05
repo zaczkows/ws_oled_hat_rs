@@ -13,10 +13,10 @@ pub struct Ssd1305 {
     buffer: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Offset {
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 #[derive(Debug)]
@@ -121,7 +121,7 @@ impl Ssd1305 {
         }
     }
 
-    pub fn text(&mut self, fs: &FontSettings, text: &str) -> (usize, usize) {
+    pub fn text(&mut self, fs: &FontSettings, off: &Offset, text: &str) -> (usize, usize) {
         let v_metrics = fs.font.v_metrics(fs.scale);
         let offset = rusttype::point(0.0, v_metrics.ascent);
         let glyphs: Vec<_> = fs.font.layout(text, fs.scale, offset).collect();
@@ -136,21 +136,19 @@ impl Ssd1305 {
             .unwrap_or(0.0)
             .ceil() as usize;
 
-        print!("\rwidth: {}, height: {}", width, pixel_height);
-
         let w = self.width() as i32;
         let h = self.height() as i32;
         let data = &mut self.buffer;
         for g in glyphs {
             if let Some(bb) = g.pixel_bounding_box() {
                 g.draw(|x, y, v| {
-                    let x = x as i32 + bb.min.x;
-                    let y = y as i32 + bb.min.y;
+                    let x = x as i32 + bb.min.x + off.x;
+                    let y = y as i32 + bb.min.y + off.y;
                     if x >= w || y >= h {
                         return;
                     }
                     // v should be in the range 0.0 to 1.0
-                    let i = if v > 0.45 { 1 } else { 0 };
+                    let i = if v > 0.33 { 1 } else { 0 };
                     data[(x + (y / 8) * w) as usize] |= i << (y % 8);
                 })
             }
