@@ -1,2 +1,7 @@
 [workspace]
 members = ["bcm2835-rs", "ssd1305", "app"]
+
+[profile.release]
+lto = 'thin'
+panic = 'abort'
+codegen-units = 1
