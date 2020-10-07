@@ -44,16 +44,16 @@ fn main() {
             / 1000.0f32;
         let date = format!("{} | {:.1}°C", &now.format("%a,%d/%m/%Y"), &temp);
         let dims = screen.text(&fs, &offset, &date);
-        print!("\rwidth: {}, height: {}", dims.0, dims.1);
+        print!("\rwidth: {}, height: {}", dims.width, dims.height);
 
         offset.x = 23;
-        offset.y = dims.1 as i32;
+        offset.y = dims.height as i32;
         fs.height = 24.0;
         fs.scale.x = fs.height * 0.9;
         fs.scale.y = fs.height;
         let hour = now.format("%T");
         let dims = screen.text(&fs, &offset, &hour);
-        print!("\rwidth: {}, height: {}", dims.0, dims.1);
+        print!("\rwidth: {}, height: {}", dims.width, dims.height);
 
         screen.display();
         std::thread::sleep(std::time::Duration::from_millis(1000));
