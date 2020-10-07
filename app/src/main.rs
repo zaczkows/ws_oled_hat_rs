@@ -1,6 +1,23 @@
-use ssd1305::{FontSettings, Offset, Ssd1305};
+use ssd1305::{Offset, RustTypeFont, Ssd1305};
 
 fn main() {
+    let path = if let Some(font_path) = std::env::args().nth(1) {
+        font_path
+    } else {
+        String::from("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf")
+    };
+
+    if path.ends_with(".psf") || path.ends_with(".psf.gz") {
+        let _p = psfu::Font::new_from_str(path.as_str());
+    }
+
+    let fs = RustTypeFont::new(&path);
+    if fs.is_none() {
+        println!("Failed to create font");
+        return;
+    }
+    let mut fs = fs.unwrap();
+
     let screen = Ssd1305::new();
     if screen.is_none() {
         println!("Failed to create ssd1305");
@@ -8,15 +25,6 @@ fn main() {
     }
     let mut screen = screen.unwrap();
     screen.begin();
-
-    let path = if let Some(font_path) = std::env::args().nth(1) {
-        font_path
-    } else {
-        String::from("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf")
-    };
-
-    let fs = FontSettings::new(&path);
-    let mut fs = fs.unwrap();
 
     let mut offset = Offset { x: 0, y: 0 };
     loop {

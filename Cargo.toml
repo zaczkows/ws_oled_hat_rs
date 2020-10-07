@@ -1,5 +1,5 @@
 [workspace]
-members = ["bcm2835-rs", "ssd1305", "app"]
+members = ["bcm2835-rs", "ssd1305", "app", "psfu"]
 
 [profile.release]
 lto = 'thin'

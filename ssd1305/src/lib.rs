@@ -1,4 +1,6 @@
-pub use rusttype::{Font, Scale};
+mod rust_type_font;
+
+pub use rust_type_font::RustTypeFont;
 
 const RST: u8 = 25;
 const DC: u8 = 24;
@@ -19,11 +21,21 @@ pub struct Offset {
     pub y: i32,
 }
 
-#[derive(Debug)]
-pub struct FontSettings<'a> {
-    font: rusttype::Font<'a>,
-    pub height: f32,
-    pub scale: rusttype::Scale,
+#[derive(Debug, Default)]
+pub struct Dims {
+    pub width: usize,
+    pub height: usize,
+}
+
+pub struct Data<'a> {
+    pub buf: &'a mut Vec<u8>,
+    pub dims: Dims,
+}
+
+pub trait Renderer {
+    /// Returns rendered text dimentions
+    fn render_text(&self, data: &mut Data, off: &Offset, text: &str) -> Dims;
+    fn renders_text_size(&self, text_size: usize) -> bool;
 }
 
 impl Ssd1305 {
@@ -121,10 +133,10 @@ impl Ssd1305 {
         }
     }
 
-    pub fn text(&mut self, fs: &FontSettings, off: &Offset, text: &str) -> (usize, usize) {
-        let v_metrics = fs.font.v_metrics(fs.scale);
+    pub fn text(&mut self, fs: &RustTypeFont, off: &Offset, text: &str) -> (usize, usize) {
+        let v_metrics = fs.font().v_metrics(fs.scale);
         let offset = rusttype::point(0.0, v_metrics.ascent);
-        let glyphs: Vec<_> = fs.font.layout(text, fs.scale, offset).collect();
+        let glyphs: Vec<_> = fs.font().layout(text, fs.scale, offset).collect();
 
         let pixel_height = fs.height.ceil() as usize;
         // Find the most visually pleasing width to display
@@ -163,26 +175,6 @@ impl Ssd1305 {
 impl Drop for Ssd1305 {
     fn drop(&mut self) {
         self.spi = None;
-    }
-}
-
-impl<'a> FontSettings<'a> {
-    pub fn new(font_path: &str) -> Option<FontSettings> {
-        let data = std::fs::read(&font_path);
-        if data.is_err() {
-            return None;
-        }
-        let data = data.unwrap();
-        let font = Font::try_from_vec(data);
-        if font.is_none() {
-            return None;
-        }
-
-        Some(FontSettings {
-            font: font.unwrap(),
-            height: 0.0,
-            scale: Scale::uniform(1.0),
-        })
     }
 }
 
