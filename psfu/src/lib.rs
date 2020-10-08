@@ -81,11 +81,9 @@ impl Font {
 
         let row = &self.data[cn];
         for h in 0..self.height {
-            for bw in 0..self.byte_width {
-                let bbb = row[h * self.byte_width + bw];
-                for bit in 0..8 {
-                    d.push((bbb >> (7 - bit)) & 0b1);
-                }
+            for bit in 0..self.width {
+                let bbb = row[h * self.byte_width + bit / 8];
+                d.push((bbb >> (7 - (bit % 8))) & 0b1);
             }
         }
 
@@ -156,7 +154,7 @@ impl Font {
             height = as_le_u32(&mut data) as u8;
             width = as_le_u32(&mut data) as u8;
             byte_width = (width + 7) / 8;
-            assert_eq!(width, byte_width * 8);
+            assert!(width <= byte_width * 8);
         }
 
         println!(
@@ -172,10 +170,7 @@ impl Font {
                     vvv[n as usize].push(*data.next().unwrap());
                 }
             }
-            assert_eq!(
-                vvv[n as usize].len(),
-                height as usize * (width as usize / 8)
-            );
+            assert_eq!(vvv[n as usize].len(), height as usize * byte_width as usize);
         }
 
         Ok(Font {

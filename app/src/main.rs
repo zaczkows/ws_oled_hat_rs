@@ -12,7 +12,7 @@ fn main() {
         if p.is_ok() {
             let p = p.unwrap();
             let c = p.get_char('%').unwrap();
-            println!("-------------------");
+            println!("{:-<1$}", "", c.width + 2);
             for h in 0..c.height {
                 print!("|");
                 for w in 0..c.width {
@@ -21,7 +21,7 @@ fn main() {
                 }
                 println!("|");
             }
-            println!("-------------------");
+            println!("{:-<1$}", "", c.width + 2);
         }
     }
 
