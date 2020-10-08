@@ -8,7 +8,21 @@ fn main() {
     };
 
     if path.ends_with(".psf") || path.ends_with(".psf.gz") {
-        let _p = psfu::Font::new_from_str(path.as_str());
+        let p = psfu::Font::new_from_str(path.as_str());
+        if p.is_ok() {
+            let p = p.unwrap();
+            let c = p.get_char('%').unwrap();
+            println!("-------------------");
+            for h in 0..c.height {
+                print!("|");
+                for w in 0..c.width {
+                    let what = if c.d[h * c.width + w] != 0 { "X" } else { " " };
+                    print!("{}", what);
+                }
+                println!("|");
+            }
+            println!("-------------------");
+        }
     }
 
     let fs = RustTypeFont::new(&path);
@@ -42,7 +56,7 @@ fn main() {
             .parse::<f32>()
             .unwrap()
             / 1000.0f32;
-        let date = format!("{} | {:.1}°C", &now.format("%a,%d/%m/%Y"), &temp);
+        let date = format!("{} | {:.1}°C", &now.format("%a,%d.%m.%Y"), &temp);
         let dims = screen.text(&fs, &offset, &date);
         print!("\rwidth: {}, height: {}", dims.width, dims.height);
 

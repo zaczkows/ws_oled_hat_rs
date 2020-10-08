@@ -148,7 +148,7 @@ impl Ssd1305 {
         )
     }
 
-    pub fn set_pixel(&mut self) {}
+    // pub fn set_pixel(&mut self) {}
 }
 
 impl Drop for Ssd1305 {

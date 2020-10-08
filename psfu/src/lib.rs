@@ -2,6 +2,16 @@ use std::io::Read;
 
 pub struct Font {
     data: Vec<Vec<u8>>,
+    width: usize,
+    height: usize,
+    byte_width: usize,
+}
+
+#[derive(Debug)]
+pub struct Vec2d<T> {
+    pub d: Vec<T>,
+    pub height: usize,
+    pub width: usize,
 }
 
 #[derive(Debug)]
@@ -48,6 +58,44 @@ impl Font {
         Font::parse_font_data(&data)
     }
 
+    pub fn height(&self) -> usize {
+        self.height
+    }
+
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    /// Returns number of available characters in the font
+    pub fn size(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn get_char(&self, c: char) -> Option<Vec2d<u8>> {
+        let cn = c as usize;
+        if cn > self.data.len() {
+            return None;
+        }
+
+        let mut d = Vec::with_capacity(self.data[cn].len() * (self.byte_width * 8));
+
+        let row = &self.data[cn];
+        for h in 0..self.height {
+            for bw in 0..self.byte_width {
+                let bbb = row[h * self.byte_width + bw];
+                for bit in 0..8 {
+                    d.push((bbb >> (7 - bit)) & 0b1);
+                }
+            }
+        }
+
+        Some(Vec2d {
+            d,
+            height: self.height,
+            width: self.width,
+        })
+    }
+
     fn parse_font_data(raw_data: &[u8]) -> Result<Font, Error> {
         if raw_data.is_empty() {
             return Err(Error::InvalidFontFormat);
@@ -91,32 +139,29 @@ impl Font {
                 return Err(Error::InvalidFontFormat);
             }
             let version = get_data(&mut data, 4);
-            if version == [0, 0, 0, 0] {
+            if version != [0, 0, 0, 0] {
                 return Err(Error::InvalidFontFormat);
             }
             let offset = as_le_u32(&mut data);
             if offset != 0x20 {
                 return Err(Error::InvalidFontFormat);
             }
-            let _flags = as_le_u32(&mut data);
+            let _flags = get_data(&mut data, 4);
             number = *data.next().unwrap() as u32 + *data.next().unwrap() as u32 * 256;
             let no_chars = as_le_u16(&mut data);
             if no_chars as u32 > 64 * 1024 {
                 return Err(Error::InvalidFontFormat);
             }
             let _sizeof_char = as_le_u32(&mut data);
-            height = *data.next().unwrap();
-            let _heigh_char_in_lines = get_data(&mut data, 4);
-            width = *data.next().unwrap();
-            if get_data(&mut data, 3) != [0, 0, 0] {
-                return Err(Error::InvalidFontFormat);
-            }
+            height = as_le_u32(&mut data) as u8;
+            width = as_le_u32(&mut data) as u8;
             byte_width = (width + 7) / 8;
+            assert_eq!(width, byte_width * 8);
         }
 
         println!(
-            "Parsing psf mode {} font file, with {} characters {} x {} (width x height)",
-            &mode, &number, &width, &height
+            "Parsing psf mode {} font file, with {} characters {} x {} (width x height) [bw={}]",
+            &mode, &number, &width, &height, &byte_width
         );
 
         let mut vvv: Vec<Vec<u8>> = Vec::with_capacity(number as usize);
@@ -127,25 +172,30 @@ impl Font {
                     vvv[n as usize].push(*data.next().unwrap());
                 }
             }
-            assert!(
-                vvv[n as usize].len()
-                    == height as usize * width as usize / (byte_width as usize * 8)
+            assert_eq!(
+                vvv[n as usize].len(),
+                height as usize * (width as usize / 8)
             );
         }
 
-        Ok(Font { data: vvv })
+        Ok(Font {
+            data: vvv,
+            width: width as usize,
+            height: height as usize,
+            byte_width: byte_width as usize,
+        })
     }
 }
 
 fn as_le_u32(data: &mut std::slice::Iter<u8>) -> u32 {
-    (*data.next().unwrap() as u32) << 24
-        | (*data.next().unwrap() as u32) << 16
+    (*data.next().unwrap() as u32)
         | (*data.next().unwrap() as u32) << 8
-        | (*data.next().unwrap() as u32)
+        | (*data.next().unwrap() as u32) << 16
+        | (*data.next().unwrap() as u32) << 24
 }
 
 fn as_le_u16(data: &mut std::slice::Iter<u8>) -> u16 {
-    (*data.next().unwrap() as u16) << 8 | (*data.next().unwrap() as u16)
+    (*data.next().unwrap() as u16) | (*data.next().unwrap() as u16) << 8
 }
 
 fn get_data(data: &mut std::slice::Iter<u8>, count: usize) -> Vec<u8> {
