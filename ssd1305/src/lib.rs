@@ -12,23 +12,10 @@ pub struct Ssd1305 {
 }
 
 #[derive(Debug, Default)]
-pub struct Offset {
-    pub x: i32,
-    pub y: i32,
-}
-
-#[derive(Debug, Default)]
 pub struct Dims {
     pub width: usize,
     pub height: usize,
 }
-
-/*
-pub struct Data<'a> {
-    pub buf: &'a mut Vec<u8>,
-    pub dims: Dims,
-}
-*/
 
 impl Ssd1305 {
     pub fn new() -> Option<Self> {
@@ -137,23 +124,6 @@ impl Ssd1305 {
         }
         true
     }
-
-    /*
-    pub fn text(&mut self, renderer: &dyn Renderer, off: &Offset, text: &str) -> Dims {
-        let dims = Dims {
-            width: self.width(),
-            height: self.height(),
-        };
-        renderer.render_text(
-            &mut Data {
-                buf: &mut self.buffer,
-                dims,
-            },
-            off,
-            text,
-        )
-    }
-    */
 }
 
 impl Drop for Ssd1305 {

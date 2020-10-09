@@ -1,42 +1,36 @@
 mod renderer;
 
-use renderer::Renderer;
-use ssd1305::{Offset, Ssd1305};
+use renderer::{Params, Renderer, Scale};
+use ssd1305::Ssd1305;
 
-fn main() {
-    let path = if let Some(font_path) = std::env::args().nth(1) {
-        font_path
-    } else {
-        String::from("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf")
-    };
-
-    // let mut renderers: Vec<Box<&dyn Renderer>> = Vec::new();
-
+fn load_font(path: &str) -> Option<Box<dyn Renderer>> {
     if path.ends_with(".psf") || path.ends_with(".psf.gz") {
-        let p = psfu::Font::new_from_str(path.as_str());
+        let p = psfu::Font::new_from_str(path);
         if p.is_ok() {
-            let p = p.unwrap();
-            let c = p.get_char('%').unwrap();
-            println!("{:-<1$}", "", c.width + 2);
-            for h in 0..c.height {
-                print!("|");
-                for w in 0..c.width {
-                    let what = if c.d[h * c.width + w] != 0 { "X" } else { " " };
-                    print!("{}", what);
-                }
-                println!("|");
-            }
-            println!("{:-<1$}", "", c.width + 2);
+            return Some(Box::new(p.unwrap()));
+        }
+    } else {
+        let fs = renderer::RustTypeFont::new(path);
+        if fs.is_some() {
+            return Some(Box::new(fs.unwrap()));
         }
     }
 
-    let fs = renderer::RustTypeFont::new(&path);
-    if fs.is_none() {
-        println!("Failed to create font");
-        return;
+    None
+}
+
+fn main() {
+    let mut renderers: Vec<Box<dyn Renderer>> = Vec::new();
+    let args = std::env::args();
+    if args.len() < 2 {
+        renderers.push(load_font(&"/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf").unwrap());
+    } else {
+        for path in args {
+            if let Some(font) = load_font(&path) {
+                renderers.push(font);
+            }
+        }
     }
-    let mut fs = fs.unwrap();
-    // renderers.push(Box::new(&fs));
 
     let screen = Ssd1305::new();
     if screen.is_none() {
@@ -46,15 +40,20 @@ fn main() {
     let mut screen = screen.unwrap();
     screen.begin();
 
-    let mut offset = Offset { x: 0, y: 0 };
+    let mut params = Params {
+        scale: Scale { x: 0.0, y: 0.0 },
+        height: 0,
+        x: 0,
+        y: 0,
+    };
     loop {
         screen.clear();
 
-        offset.x = 0;
-        offset.y = 0;
-        fs.height = 12.0;
-        fs.scale.x = fs.height * 0.9;
-        fs.scale.y = fs.height;
+        params.x = 0;
+        params.y = 0;
+        params.height = 12;
+        params.scale.x = params.height as f32 * 0.9;
+        params.scale.y = params.height as f32;
         let now = time::OffsetDateTime::now_local();
         let temp: f32 = std::fs::read_to_string("/sys/class/thermal/thermal_zone0/temp")
             .unwrap()
@@ -63,16 +62,16 @@ fn main() {
             .unwrap()
             / 1000.0f32;
         let date = format!("{} | {:.1}°C", &now.format("%a,%d.%m.%Y"), &temp);
-        let dims = fs.render_text(&mut screen, &offset, &date);
+        let dims = renderers[0].render_text(&mut screen, &params, &date);
         print!("\rwidth: {}, height: {}", dims.width, dims.height);
 
-        offset.x = 23;
-        offset.y = dims.height as i32;
-        fs.height = 24.0;
-        fs.scale.x = fs.height * 0.9;
-        fs.scale.y = fs.height;
+        params.x = 23;
+        params.y = dims.height as i32;
+        params.height = 24;
+        params.scale.x = params.height as f32 * 0.9;
+        params.scale.y = params.height as f32;
         let hour = now.format("%T");
-        let dims = fs.render_text(&mut screen, &offset, &hour);
+        let dims = renderers[0].render_text(&mut screen, &params, &hour);
         print!("\rwidth: {}, height: {}", dims.width, dims.height);
 
         screen.display();

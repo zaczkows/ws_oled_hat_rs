@@ -94,6 +94,20 @@ impl Font {
         })
     }
 
+    pub fn print_char(&self, c: char) {
+        let c = self.get_char(c).unwrap();
+        println!("{:-<1$}", "", c.width + 2);
+        for h in 0..c.height {
+            print!("|");
+            for w in 0..c.width {
+                let what = if c.d[h * c.width + w] != 0 { "X" } else { " " };
+                print!("{}", what);
+            }
+            println!("|");
+        }
+        println!("{:-<1$}", "", c.width + 2);
+    }
+
     fn parse_font_data(raw_data: &[u8]) -> Result<Font, Error> {
         if raw_data.is_empty() {
             return Err(Error::InvalidFontFormat);
