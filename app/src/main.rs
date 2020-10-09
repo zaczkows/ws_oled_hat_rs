@@ -1,4 +1,7 @@
-use ssd1305::{Offset, RustTypeFont, Ssd1305};
+mod renderer;
+
+use renderer::Renderer;
+use ssd1305::{Offset, Ssd1305};
 
 fn main() {
     let path = if let Some(font_path) = std::env::args().nth(1) {
@@ -6,6 +9,8 @@ fn main() {
     } else {
         String::from("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf")
     };
+
+    // let mut renderers: Vec<Box<&dyn Renderer>> = Vec::new();
 
     if path.ends_with(".psf") || path.ends_with(".psf.gz") {
         let p = psfu::Font::new_from_str(path.as_str());
@@ -25,12 +30,13 @@ fn main() {
         }
     }
 
-    let fs = RustTypeFont::new(&path);
+    let fs = renderer::RustTypeFont::new(&path);
     if fs.is_none() {
         println!("Failed to create font");
         return;
     }
     let mut fs = fs.unwrap();
+    // renderers.push(Box::new(&fs));
 
     let screen = Ssd1305::new();
     if screen.is_none() {
@@ -57,7 +63,7 @@ fn main() {
             .unwrap()
             / 1000.0f32;
         let date = format!("{} | {:.1}°C", &now.format("%a,%d.%m.%Y"), &temp);
-        let dims = screen.text(&fs, &offset, &date);
+        let dims = fs.render_text(&mut screen, &offset, &date);
         print!("\rwidth: {}, height: {}", dims.width, dims.height);
 
         offset.x = 23;
@@ -66,7 +72,7 @@ fn main() {
         fs.scale.x = fs.height * 0.9;
         fs.scale.y = fs.height;
         let hour = now.format("%T");
-        let dims = screen.text(&fs, &offset, &hour);
+        let dims = fs.render_text(&mut screen, &offset, &hour);
         print!("\rwidth: {}, height: {}", dims.width, dims.height);
 
         screen.display();

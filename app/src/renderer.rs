@@ -1,4 +1,38 @@
 pub use rusttype::{Font, Scale};
+use ssd1305::{Dims, Offset, Ssd1305};
+
+pub trait Renderer {
+    /// Returns rendered text dimentions
+    fn render_text(&self, data: &mut Ssd1305, off: &Offset, text: &str) -> Dims;
+    fn renders_text_size(&self, text_size: usize) -> bool;
+}
+
+impl Renderer for psfu::Font {
+    fn render_text(&self, data: &mut Ssd1305, off: &Offset, text: &str) -> Dims {
+        for t in text.chars() {
+            let c = self.get_char(t).unwrap();
+            for h in 0..c.height {
+                for w in 0..c.width {
+                    let r#where = h * c.width + w;
+                    let x = w + off.x as usize;
+                    let y = h + off.y as usize;
+                    // data.buf[(x + (y / 8) * w)] |= what;
+                    let render_pixel = c.d[r#where] != 0;
+                    data.set_pixel(x as usize, y as usize, render_pixel);
+                }
+            }
+        }
+
+        Dims {
+            width: self.width() * text.len(),
+            height: self.height(),
+        }
+    }
+
+    fn renders_text_size(&self, text_size: usize) -> bool {
+        self.height() == text_size
+    }
+}
 
 #[derive(Debug)]
 pub struct RustTypeFont<'a> {
@@ -31,8 +65,8 @@ impl<'a> RustTypeFont<'a> {
     }
 }
 
-impl<'a> super::Renderer for RustTypeFont<'a> {
-    fn render_text(&self, data: &mut super::Data, off: &super::Offset, text: &str) -> super::Dims {
+impl<'a> Renderer for RustTypeFont<'a> {
+    fn render_text(&self, data: &mut Ssd1305, off: &Offset, text: &str) -> Dims {
         let v_metrics = self.font.v_metrics(self.scale);
         let offset = rusttype::point(0.0, v_metrics.ascent);
         let glyphs: Vec<_> = self.font().layout(text, self.scale, offset).collect();
@@ -47,9 +81,8 @@ impl<'a> super::Renderer for RustTypeFont<'a> {
             .unwrap_or(0.0)
             .ceil() as usize;
 
-        let w = data.dims.width as i32;
-        let h = data.dims.height as i32;
-        let data = &mut data.buf;
+        let w = data.width() as i32;
+        let h = data.height() as i32;
         for g in glyphs {
             if let Some(bb) = g.pixel_bounding_box() {
                 g.draw(|x, y, v| {
@@ -59,13 +92,14 @@ impl<'a> super::Renderer for RustTypeFont<'a> {
                         return;
                     }
                     // v should be in the range 0.0 to 1.0
-                    let i = if v > 0.33 { 1 } else { 0 };
-                    data[(x + (y / 8) * w) as usize] |= i << (y % 8);
+                    let render_pixel = v > 0.33;
+                    data.set_pixel(x as usize, y as usize, render_pixel);
+                    // data[(x + (y / 8) * w) as usize] |= i << (y % 8);
                 })
             }
         }
 
-        super::Dims {
+        Dims {
             width,
             height: pixel_height,
         }

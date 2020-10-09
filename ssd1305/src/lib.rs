@@ -1,14 +1,10 @@
-mod rust_type_font;
-
-pub use rust_type_font::RustTypeFont;
-
 const RST: u8 = 25;
 const DC: u8 = 24;
 const PAGES: usize = 4;
 const WIDTH: usize = 128;
 const HEIGHT: usize = 8 * 4; // 8 pixels * 4 rows
 
-// #[derive(Debug)]
+#[derive(Debug)]
 pub struct Ssd1305 {
     gpio: bcm2835_rs::Bcm2835Gpio,
     spi: Option<bcm2835_rs::Bcm2835Spi>,
@@ -27,16 +23,12 @@ pub struct Dims {
     pub height: usize,
 }
 
+/*
 pub struct Data<'a> {
     pub buf: &'a mut Vec<u8>,
     pub dims: Dims,
 }
-
-pub trait Renderer {
-    /// Returns rendered text dimentions
-    fn render_text(&self, data: &mut Data, off: &Offset, text: &str) -> Dims;
-    fn renders_text_size(&self, text_size: usize) -> bool;
-}
+*/
 
 impl Ssd1305 {
     pub fn new() -> Option<Self> {
@@ -133,6 +125,20 @@ impl Ssd1305 {
         }
     }
 
+    pub fn set_pixel(&mut self, x: usize, y: usize, is_set: bool) -> bool {
+        if x > self.width() || y > self.height() {
+            return false;
+        }
+        let w = self.width();
+        if is_set {
+            self.buffer[(x + (y / 8) * w)] |= 1 << (y % 8);
+        } else {
+            self.buffer[(x + (y / 8) * w)] &= !(1 << (y % 8));
+        }
+        true
+    }
+
+    /*
     pub fn text(&mut self, renderer: &dyn Renderer, off: &Offset, text: &str) -> Dims {
         let dims = Dims {
             width: self.width(),
@@ -147,8 +153,7 @@ impl Ssd1305 {
             text,
         )
     }
-
-    // pub fn set_pixel(&mut self) {}
+    */
 }
 
 impl Drop for Ssd1305 {
