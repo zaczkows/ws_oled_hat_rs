@@ -18,9 +18,9 @@ pub trait Renderer {
 impl Renderer for psfu::Font {
     fn render_text(&self, data: &mut Ssd1305, params: &Params, text: &str) -> Dims {
         let mut x = params.x as usize;
-        'outer: for t in text.chars() {
+        for t in text.chars() {
             let c = self.get_char(t).unwrap();
-            for h in 0..c.height {
+            'outer: for h in 0..c.height {
                 for w in 0..c.width {
                     let r#where = h * c.width + w;
                     let x = w + x;

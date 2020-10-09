@@ -79,7 +79,7 @@ fn main() {
         let date = format!("{}|{:.1}°C", &now.format("%a,%d.%m.%Y"), &temp);
         if let Some(dims) = render_text(&renderers, &mut screen, &params, &date) {
             print!("\rwidth: {}, height: {}", dims.width, dims.height);
-            params.x = 23;
+            params.x = 17;
             params.y = dims.height as i32;
         }
 
@@ -87,8 +87,9 @@ fn main() {
         params.scale.x = params.height as f32 * 0.9;
         params.scale.y = params.height as f32;
         let hour = now.format("%T");
-        let dims = renderers[0].render_text(&mut screen, &params, &hour);
-        print!("\rwidth: {}, height: {}", dims.width, dims.height);
+        if let Some(dims) = render_text(&renderers, &mut screen, &params, &hour) {
+            print!("\rwidth: {}, height: {}", dims.width, dims.height);
+        }
 
         screen.display();
         std::thread::sleep(std::time::Duration::from_millis(1000));
