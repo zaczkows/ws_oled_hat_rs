@@ -1,7 +1,7 @@
 mod renderer;
 
 use renderer::{Params, Renderer, Scale};
-use ssd1305::Ssd1305;
+use ssd1305::{Dims, Ssd1305};
 
 fn load_font(path: &str) -> Option<Box<dyn Renderer>> {
     if path.ends_with(".psf") || path.ends_with(".psf.gz") {
@@ -13,6 +13,21 @@ fn load_font(path: &str) -> Option<Box<dyn Renderer>> {
         let fs = renderer::RustTypeFont::new(path);
         if fs.is_some() {
             return Some(Box::new(fs.unwrap()));
+        }
+    }
+
+    None
+}
+
+fn render_text(
+    renderers: &Vec<Box<dyn Renderer>>,
+    data: &mut Ssd1305,
+    params: &Params,
+    text: &str,
+) -> Option<Dims> {
+    for r in renderers {
+        if r.renders_text_size(params.height) {
+            return Some(r.render_text(data, params, text));
         }
     }
 
@@ -62,11 +77,12 @@ fn main() {
             .unwrap()
             / 1000.0f32;
         let date = format!("{}|{:.1}°C", &now.format("%a,%d.%m.%Y"), &temp);
-        let dims = renderers[0].render_text(&mut screen, &params, &date);
-        print!("\rwidth: {}, height: {}", dims.width, dims.height);
+        if let Some(dims) = render_text(&renderers, &mut screen, &params, &date) {
+            print!("\rwidth: {}, height: {}", dims.width, dims.height);
+            params.x = 23;
+            params.y = dims.height as i32;
+        }
 
-        params.x = 23;
-        params.y = dims.height as i32;
         params.height = 24;
         params.scale.x = params.height as f32 * 0.9;
         params.scale.y = params.height as f32;
