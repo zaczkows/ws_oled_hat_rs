@@ -61,7 +61,7 @@ fn main() {
             .parse::<f32>()
             .unwrap()
             / 1000.0f32;
-        let date = format!("{} | {:.1}°C", &now.format("%a,%d.%m.%Y"), &temp);
+        let date = format!("{}|{:.1}°C", &now.format("%a,%d.%m.%Y"), &temp);
         let dims = renderers[0].render_text(&mut screen, &params, &date);
         print!("\rwidth: {}, height: {}", dims.width, dims.height);
 

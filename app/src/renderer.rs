@@ -11,23 +11,28 @@ pub struct Params {
 
 pub trait Renderer {
     /// Returns rendered text dimentions
-    fn render_text(&self, data: &mut Ssd1305, off: &Params, text: &str) -> Dims;
+    fn render_text(&self, data: &mut Ssd1305, params: &Params, text: &str) -> Dims;
     fn renders_text_size(&self, text_size: usize) -> bool;
 }
 
 impl Renderer for psfu::Font {
-    fn render_text(&self, data: &mut Ssd1305, off: &Params, text: &str) -> Dims {
-        for t in text.chars() {
+    fn render_text(&self, data: &mut Ssd1305, params: &Params, text: &str) -> Dims {
+        let mut x = params.x as usize;
+        'outer: for t in text.chars() {
             let c = self.get_char(t).unwrap();
             for h in 0..c.height {
                 for w in 0..c.width {
                     let r#where = h * c.width + w;
-                    let x = w + off.x as usize;
-                    let y = h + off.y as usize;
+                    let x = w + x;
+                    let y = h + params.y as usize;
+                    if x >= data.width() || y >= data.height() {
+                        break 'outer;
+                    }
                     let render_pixel = c.d[r#where] != 0;
                     data.set_pixel(x as usize, y as usize, render_pixel);
                 }
             }
+            x += c.width;
         }
 
         Dims {
