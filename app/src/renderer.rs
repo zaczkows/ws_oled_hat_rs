@@ -15,24 +15,23 @@ pub trait Renderer {
     fn renders_text_size(&self, text_size: usize) -> bool;
 }
 
-impl Renderer for psfu::Font {
+impl Renderer for psf::Font {
     fn render_text(&self, data: &mut Ssd1305, params: &Params, text: &str) -> Dims {
         let mut x = params.x as usize;
         for t in text.chars() {
             let c = self.get_char(t).unwrap();
-            'outer: for h in 0..c.height {
-                for w in 0..c.width {
-                    let r#where = h * c.width + w;
+            'outer: for h in 0..c.height() {
+                for w in 0..c.width() {
                     let x = w + x;
                     let y = h + params.y as usize;
                     if x >= data.width() || y >= data.height() {
                         break 'outer;
                     }
-                    let render_pixel = c.d[r#where] != 0;
+                    let render_pixel = c.get(x, y).unwrap() != 0;
                     data.set_pixel(x as usize, y as usize, render_pixel);
                 }
             }
-            x += c.width;
+            x += c.width();
         }
 
         Dims {

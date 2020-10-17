@@ -5,7 +5,7 @@ use ssd1305::{Dims, Ssd1305};
 
 fn load_font(path: &str) -> Option<Box<dyn Renderer>> {
     if path.ends_with(".psf") || path.ends_with(".psf.gz") {
-        let p = psfu::Font::new_from_str(path);
+        let p = psf::Font::new(path);
         if p.is_ok() {
             return Some(Box::new(p.unwrap()));
         }
