@@ -27,7 +27,7 @@ impl Renderer for psf::Font {
                     if x >= data.width() || y >= data.height() {
                         break 'outer;
                     }
-                    let render_pixel = c.get(x, y).unwrap() != 0;
+                    let render_pixel = c.get(w, h).unwrap() != 0;
                     data.set_pixel(x as usize, y as usize, render_pixel);
                 }
             }
