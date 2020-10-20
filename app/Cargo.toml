@@ -5,7 +5,7 @@ name = "oled_hat_rp"
 version = "0.1.0"
 
 [dependencies]
-psf = { git = "https://github.com/zaczkows/psf.git", rev = "4806ad27fda26715f72ccb323c751edd44af5577" }
+psf = { git = "https://github.com/zaczkows/psf.git", rev = "cf1e7b14ea8287362bcd0814d67eb2407dc37373" }
 rusttype = "0.9.x"
 ssd1305 = { path = "../ssd1305" }
 time = "0.2.x"

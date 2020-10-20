@@ -49,7 +49,7 @@ fn main() {
 
     let screen = Ssd1305::new();
     if screen.is_none() {
-        println!("Failed to create ssd1305");
+        eprintln!("Failed to create ssd1305");
         return;
     }
     let mut screen = screen.unwrap();
@@ -78,7 +78,6 @@ fn main() {
             / 1000.0f32;
         let date = format!("{}|{:.1}°C", &now.format("%a,%d.%m.%Y"), &temp);
         if let Some(dims) = render_text(&renderers, &mut screen, &params, &date) {
-            print!("\rwidth: {}, height: {}", dims.width, dims.height);
             params.x = 17;
             params.y = dims.height as i32;
         }
@@ -87,9 +86,7 @@ fn main() {
         params.scale.x = params.height as f32 * 0.9;
         params.scale.y = params.height as f32;
         let hour = now.format("%T");
-        if let Some(dims) = render_text(&renderers, &mut screen, &params, &hour) {
-            print!("\rwidth: {}, height: {}", dims.width, dims.height);
-        }
+        render_text(&renderers, &mut screen, &params, &hour);
 
         screen.display();
         std::thread::sleep(std::time::Duration::from_millis(1000));
