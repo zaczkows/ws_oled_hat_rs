@@ -1,9 +1,3 @@
-const RST: u8 = 25;
-const DC: u8 = 24;
-const PAGES: usize = 4;
-const WIDTH: usize = 128;
-const HEIGHT: usize = 8 * 4; // 8 pixels * 4 rows
-
 #[derive(Debug)]
 pub struct Ssd1305 {
     gpio: bcm2835_rs::Bcm2835Gpio,
@@ -18,15 +12,21 @@ pub struct Dims {
 }
 
 impl Ssd1305 {
+    const RST: u8 = 25;
+    const DC: u8 = 24;
+    const PAGES: usize = 4;
+    const WIDTH: usize = 128;
+    const HEIGHT: usize = 8 * 4; // 8 pixels * 4 rows
+
     pub fn new() -> Option<Self> {
         let gpio = bcm2835_rs::Bcm2835Gpio::new();
         if gpio.is_some() {
             let mut s = Ssd1305 {
                 gpio: gpio.unwrap(),
                 spi: None,
-                buffer: Vec::with_capacity(PAGES * WIDTH),
+                buffer: Vec::with_capacity(Ssd1305::PAGES * Ssd1305::WIDTH),
             };
-            s.buffer.resize(PAGES * WIDTH, 0);
+            s.buffer.resize(Ssd1305::PAGES * Ssd1305::WIDTH, 0);
             Some(s)
         } else {
             None
@@ -34,16 +34,16 @@ impl Ssd1305 {
     }
 
     pub fn width(&self) -> usize {
-        WIDTH
+        Ssd1305::WIDTH
     }
 
     pub fn height(&self) -> usize {
-        HEIGHT
+        Ssd1305::HEIGHT
     }
 
     pub fn begin(&mut self) {
-        self.gpio.fsel(RST, bcm2835_rs::FunctionSelect::Outp);
-        self.gpio.fsel(DC, bcm2835_rs::FunctionSelect::Outp);
+        self.gpio.fsel(Ssd1305::RST, bcm2835_rs::FunctionSelect::Outp);
+        self.gpio.fsel(Ssd1305::DC, bcm2835_rs::FunctionSelect::Outp);
 
         self.spi = bcm2835_rs::Bcm2835Spi::new();
         if self.spi.is_none() {
@@ -58,11 +58,11 @@ impl Ssd1305 {
         spi.set_chip_select_polarity(bcm2835_rs::SpiChipSelect::Cs0, bcm2835_rs::PinVoltage::Low);
         // the default
 
-        self.gpio.write(RST, bcm2835_rs::PinVoltage::High);
+        self.gpio.write(Ssd1305::RST, bcm2835_rs::PinVoltage::High);
         std::thread::sleep(std::time::Duration::from_millis(10));
-        self.gpio.write(RST, bcm2835_rs::PinVoltage::Low);
+        self.gpio.write(Ssd1305::RST, bcm2835_rs::PinVoltage::Low);
         std::thread::sleep(std::time::Duration::from_millis(10));
-        self.gpio.write(RST, bcm2835_rs::PinVoltage::High);
+        self.gpio.write(Ssd1305::RST, bcm2835_rs::PinVoltage::High);
 
         self.gpio.spi_command(spi, 0xAE); //--turn off oled panel
         self.gpio.spi_command(spi, 0x04); //--turn off oled panel
@@ -99,7 +99,7 @@ impl Ssd1305 {
 
     pub fn display(&mut self) {
         let spi = self.spi.as_mut().expect("SPI not set!");
-        for page in 0..PAGES {
+        for page in 0..Ssd1305::PAGES {
             // Set page address
             self.gpio.spi_command(spi, 0xB0 + page as u8);
             // set low column address
@@ -107,8 +107,8 @@ impl Ssd1305 {
             /* set high column address */
             self.gpio.spi_command(spi, 0x10);
             /* write data */
-            self.gpio.write(DC, bcm2835_rs::PinVoltage::High);
-            spi.transfern(&mut self.buffer[page * WIDTH..(page + 1) * WIDTH]);
+            self.gpio.write(Ssd1305::DC, bcm2835_rs::PinVoltage::High);
+            spi.transfern(&mut self.buffer[page * Ssd1305::WIDTH..(page + 1) * Ssd1305::WIDTH]);
         }
     }
 
