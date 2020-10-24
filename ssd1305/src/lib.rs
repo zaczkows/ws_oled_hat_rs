@@ -20,9 +20,9 @@ impl Ssd1305 {
 
     pub fn new() -> Option<Self> {
         let gpio = bcm2835_rs::Bcm2835Gpio::new();
-        if gpio.is_some() {
+        if let Some(gpio) = gpio {
             let mut s = Ssd1305 {
-                gpio: gpio.unwrap(),
+                gpio,
                 spi: None,
                 buffer: Vec::with_capacity(Ssd1305::PAGES * Ssd1305::WIDTH),
             };

@@ -6,13 +6,13 @@ use ssd1305::{Dims, Ssd1305};
 fn load_font(path: &str) -> Option<Box<dyn Renderer>> {
     if path.ends_with(".psf") || path.ends_with(".psf.gz") {
         let p = psf::Font::new(path);
-        if p.is_ok() {
-            return Some(Box::new(p.unwrap()));
+        if let Ok(font) = p {
+            return Some(Box::new(font));
         }
     } else {
         let fs = renderer::RustTypeFont::new(path);
-        if fs.is_some() {
-            return Some(Box::new(fs.unwrap()));
+        if let Some(font) = fs {
+            return Some(Box::new(font));
         }
     }
 
@@ -20,7 +20,7 @@ fn load_font(path: &str) -> Option<Box<dyn Renderer>> {
 }
 
 fn render_text(
-    renderers: &Vec<Box<dyn Renderer>>,
+    renderers: &[Box<dyn Renderer>],
     data: &mut Ssd1305,
     params: &Params,
     text: &str,

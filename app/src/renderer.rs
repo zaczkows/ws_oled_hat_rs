@@ -58,9 +58,7 @@ impl<'a> RustTypeFont<'a> {
         }
         let data = data.unwrap();
         let font = Font::try_from_vec(data);
-        if font.is_none() {
-            return None;
-        }
+        font.as_ref()?;
 
         Some(RustTypeFont {
             font: font.unwrap(),
