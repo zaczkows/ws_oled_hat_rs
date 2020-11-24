@@ -42,8 +42,10 @@ impl Ssd1305 {
     }
 
     pub fn begin(&mut self) {
-        self.gpio.fsel(Ssd1305::RST, bcm2835_rs::FunctionSelect::Outp);
-        self.gpio.fsel(Ssd1305::DC, bcm2835_rs::FunctionSelect::Outp);
+        self.gpio
+            .fsel(Ssd1305::RST, bcm2835_rs::FunctionSelect::Outp);
+        self.gpio
+            .fsel(Ssd1305::DC, bcm2835_rs::FunctionSelect::Outp);
 
         self.spi = bcm2835_rs::Bcm2835Spi::new();
         if self.spi.is_none() {

@@ -69,7 +69,7 @@ fn main() {
         params.height = 12;
         params.scale.x = params.height as f32 * 0.9;
         params.scale.y = params.height as f32;
-        let now = time::OffsetDateTime::now_local();
+        let now = chrono::Local::now();
         let temp: f32 = std::fs::read_to_string("/sys/class/thermal/thermal_zone0/temp")
             .unwrap()
             .trim()
@@ -85,7 +85,7 @@ fn main() {
         params.height = 24;
         params.scale.x = params.height as f32 * 0.9;
         params.scale.y = params.height as f32;
-        let hour = now.format("%T");
+        let hour = format!("{}", now.format("%_H:%M:%S"));
         render_text(&renderers, &mut screen, &params, &hour);
 
         screen.display();

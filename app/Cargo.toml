@@ -5,7 +5,7 @@ name = "oled_hat_rp"
 version = "0.1.0"
 
 [dependencies]
+chrono = "0.4.x"
 psf = "0.2.x"
 rusttype = "0.9.x"
 ssd1305 = { path = "../ssd1305" }
-time = "0.2.x"
