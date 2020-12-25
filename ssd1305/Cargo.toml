@@ -7,4 +7,4 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bcm2835-rs = { path = "../bcm2835-rs" }
+bcm2835-rs = { git = "https://github.com/zaczkows/bcm2835-rs.git", branch = "main" }
