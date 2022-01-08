@@ -1,0 +1,10 @@
+[Unit]
+Description=Displays various information on oled display
+
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/oled_hat_rp /usr/share/consolefonts/Uni2-Terminus12x6.psf.gz /usr/share/consolefonts/Uni2-TerminusBold24x12.psf.gz
+
+[Install]
+WantedBy=multi-user.target
+
